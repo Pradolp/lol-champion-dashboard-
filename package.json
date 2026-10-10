@@ -1,0 +1,15 @@
+{
+  "name": "projeto-league",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Painel de Dados Pessoais do LoL — Top 10 campeões e busca de 'última vez que joguei de X' via Riot API.",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "engines": {
+    "node": ">=20.12"
+  }
+}

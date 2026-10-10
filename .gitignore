@@ -1,0 +1,21 @@
+# Dependências (o projeto não usa pacotes externos, mas mantenha por segurança)
+node_modules/
+
+# Segredos — nunca commitar
+.env
+.env.local
+.env.*.local
+
+# Documentação — apenas o README.md é versionado; os demais .md ficam em docs/
+*.md
+!/README.md
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistema / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

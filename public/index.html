@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Painel de Dados Pessoais — LoL</title>
+    <meta name="description" content="Veja seus campeões mais jogados e quando você jogou de cada campeão pela última vez." />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              lolbg: '#09101d',
+              lolcard: '#101a2e',
+              lolborder: '#1f2b45',
+              gold: '#c8aa6e',
+              goldsoft: '#e3c98a',
+              blue: '#38bdf8',
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        background-image: radial-gradient(circle at 20% 0%, #142139 0%, #09101d 55%);
+        background-attachment: fixed;
+      }
+      .spinner {
+        width: 18px;
+        height: 18px;
+        border: 2px solid rgba(200, 170, 110, 0.3);
+        border-top-color: #c8aa6e;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .winrate-bar {
+        height: 6px;
+        border-radius: 999px;
+        background: #25324d;
+        overflow: hidden;
+      }
+      .winrate-bar > span {
+        display: block;
+        height: 100%;
+        background: linear-gradient(90deg, #c8aa6e, #e3c98a);
+      }
+    </style>
+  </head>
+  <body class="min-h-screen bg-lolbg text-slate-100 antialiased">
+    <div class="mx-auto max-w-5xl px-4 py-10">
+      <header class="mb-8">
+        <h1 class="text-3xl font-bold tracking-tight text-goldsoft sm:text-4xl">
+          Painel de Dados Pessoais <span class="text-slate-400">— LoL</span>
+        </h1>
+        <p class="mt-2 max-w-2xl text-sm text-slate-400">
+          Digite seu Riot ID para ver seus 10 campeões mais jogados e descobrir quando você jogou de
+          cada campeão pela última vez.
+        </p>
+      </header>
+
+      <!-- Formulário -->
+      <form id="form" class="rounded-2xl border border-lolborder bg-lolcard/80 p-5 shadow-xl backdrop-blur">
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div class="sm:col-span-2 lg:col-span-1">
+            <label for="riotId" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Riot ID
+            </label>
+            <input
+              id="riotId"
+              name="riotId"
+              type="text"
+              placeholder="Ex.: Faker#KR1"
+              autocomplete="off"
+              class="w-full rounded-lg border border-lolborder bg-lolbg px-3 py-2 text-sm outline-none focus:border-gold"
+              required
+            />
+          </div>
+
+          <div>
+            <label for="region" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Região
+            </label>
+            <select
+              id="region"
+              class="w-full rounded-lg border border-lolborder bg-lolbg px-3 py-2 text-sm outline-none focus:border-gold"
+            ></select>
+          </div>
+
+          <div>
+            <label for="queue" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Fila
+            </label>
+            <select
+              id="queue"
+              class="w-full rounded-lg border border-lolborder bg-lolbg px-3 py-2 text-sm outline-none focus:border-gold"
+            ></select>
+          </div>
+
+          <div>
+            <label for="count" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Partidas analisadas
+            </label>
+            <select
+              id="count"
+              class="w-full rounded-lg border border-lolborder bg-lolbg px-3 py-2 text-sm outline-none focus:border-gold"
+            ></select>
+          </div>
+        </div>
+
+        <div class="mt-5 flex items-center gap-3">
+          <button
+            type="submit"
+            id="submitBtn"
+            class="inline-flex items-center gap-2 rounded-lg bg-gold px-5 py-2.5 text-sm font-semibold text-lolbg transition hover:bg-goldsoft disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Analisar
+          </button>
+          <span id="formHint" class="text-xs text-slate-500">
+            A chave de acesso fica no servidor — o navegador nunca fala direto com a Riot.
+          </span>
+        </div>
+      </form>
+
+      <!-- Status -->
+      <div id="status" class="mt-5 hidden items-center gap-3 rounded-xl border border-lolborder bg-lolcard/60 px-4 py-3 text-sm"></div>
+
+      <!-- Resultados -->
+      <section id="results" class="mt-8 hidden">
+        <div class="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+          <h2 class="text-lg font-semibold text-slate-100">
+            <span id="playerName" class="text-goldsoft"></span>
+            <span class="text-sm font-normal text-slate-400">— campeões mais jogados</span>
+          </h2>
+          <span id="matchesInfo" class="text-xs text-slate-400"></span>
+        </div>
+        <div id="topChampions" class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5"></div>
+      </section>
+
+      <!-- Busca por campeão -->
+      <section id="searchSection" class="mt-10 hidden">
+        <h2 class="mb-3 text-lg font-semibold text-slate-100">Quando joguei de…?</h2>
+        <div class="rounded-2xl border border-lolborder bg-lolcard/80 p-5">
+          <div class="flex flex-col gap-3 sm:flex-row">
+            <input
+              id="championSearch"
+              list="championList"
+              type="text"
+              placeholder="Digite um campeão (ex.: Wukong, Kai'Sa, Gragas)"
+              autocomplete="off"
+              class="w-full rounded-lg border border-lolborder bg-lolbg px-3 py-2 text-sm outline-none focus:border-gold"
+            />
+            <datalist id="championList"></datalist>
+            <button
+              id="searchBtn"
+              type="button"
+              class="whitespace-nowrap rounded-lg border border-gold px-5 py-2 text-sm font-semibold text-gold transition hover:bg-gold hover:text-lolbg disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Buscar
+            </button>
+          </div>
+          <div id="searchResult" class="mt-4 text-sm"></div>
+        </div>
+      </section>
+
+      <footer class="mt-12 border-t border-lolborder pt-4 text-center text-xs text-slate-500">
+        Dados via Riot Games API · Projeto de uso pessoal · Não afiliado à Riot Games
+      </footer>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
